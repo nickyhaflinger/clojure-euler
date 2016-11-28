@@ -109,7 +109,7 @@
 
 (defn tree-122 [path goal depth] (let [max-depth (prob-122 goal)] (cond (= depth max-depth) nil (contains? path goal) path :else (filter some? (flatten (map (fn [path-next] (tree-122 path-next goal (inc depth))) (next-sets path)))))))
 
-(defn next-sets [aa] (map #(conj aa %) (distinct (filter (fn [tt] (not (contains? aa tt))) (for [ii aa jj aa] (+ ii jj))))))
+;;(defn next-sets [aa] (map #(conj aa %) (distinct (filter (fn [tt] (not (contains? aa tt))) (for [ii aa jj aa] (+ ii jj))))))
 (defn next-sets [aa lim] (map #(conj aa %) (distinct (filter (fn [tt] (and (<= tt lim) (not (contains? aa tt)) (> tt (last aa)))) (for [ii aa jj aa] (+ ii jj))))))
 
 (defn s-search-122 [[ss goal max-depth]] (let [depth (dec (count (first ss))) max-path (last (first ss)) curr-max-depth (peek max-depth)] (cond (empty? ss) [nil goal curr-max-depth] (or (> goal (bit-shift-left max-path (- curr-max-depth depth))) (>= depth curr-max-depth)) [(shift ss) goal max-depth] (contains? (first ss) goal) [(shift ss) goal (conj max-depth depth)] :else [(reduce conj (shift ss) (next-sets (first ss) goal)) goal max-depth])))
@@ -125,7 +125,13 @@
    (or (> goal (bit-shift-left (last (peek qq)) (- (first max-depth) (dec (count (peek qq)))))) (>= (dec (count (peek qq))) (cond-dec found-goal (first max-depth)))) [(pop qq) goal max-depth found-goal]
    :else [(reduce conj (pop qq) (next-sets (peek qq) goal)) goal max-depth found-goal]))
 
-(defn q-search-122 [[qq goal max-depth]] (cond (empty? qq) [nil goal (peek max-depth)] (or (> goal (bit-shift-left (last (peek qq)) (- (peek max-depth) (dec (count (peek qq)))))) (>= (dec (count (peek qq))) (peek max-depth))) [(pop qq) goal max-depth] (contains? (peek qq) goal) [(pop qq) goal (conj max-depth (dec (count (peek qq))))] :else [(reduce conj (pop qq) (next-sets (peek qq) goal)) goal max-depth]))
+;;(defn q-search-122 [[qq goal max-depth]] (cond (empty? qq) [nil goal (peek max-depth)] (or (> goal (bit-shift-left (last (peek qq)) (- (peek max-depth) (dec (count (peek qq)))))) (>= (dec (count (peek qq))) (peek max-depth))) [(pop qq) goal max-depth] (contains? (peek qq) goal) [(pop qq) goal (conj max-depth (dec (count (peek qq))))] :else [(reduce conj (pop qq) (next-sets (peek qq) goal)) goal max-depth]))
+
+(defn fix-point [func]
+  (let [prev (atom nil)
+        pred? (fn [xx]
+                 (if (= @prev xx) false (swap! prev (fn [dd] xx))))]
+                 (fn [dd] (last (take-while pred? (iterate func dd))))))
 
 (defn sorting-sorted-sets [aa bb])
 
@@ -157,3 +163,22 @@
 (defn prob-122 [[aa bb]] [(reduce (fn debug [out ii] (cond-assoc smaller-set? out (+ bb ii) (conj (get aa bb) (+ bb ii)))) aa (get aa bb)) (inc bb)])
 
 
+(defn prime? [aa]
+  (not
+   (first
+    (filter
+     #(if (= 0 (mod aa %)) true false)
+     (take-while #(>= (Math/sqrt aa) %) primes)))))
+
+(def primes
+     (lazy-seq
+      (concat
+       '(2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97)
+       (filter prime? (iterate (partial + 2) 101)))))
+
+(defn factor-prime [nn pp]
+  (count (take-while #(= 0 (mod nn %)) (iterate (partial * pp) pp))))
+
+;;(let [aa 600851475143] (reverse (rest (reverse (reduce (fn [out pp] (if (zero? pp) (assoc out (dec (count out)) (inc (last out))) (reduce conj out (list pp (inc (last out)))))) [1] (map #(factor-prime aa %) (take-while #(>= (Math/sqrt aa) %) primes)))))))
+
+;;(last (take 10001 primes))

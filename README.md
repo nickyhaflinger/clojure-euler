@@ -1,10 +1,26 @@
 # series
 
-A Clojure library designed to ... well, that part is up to you.
+this is a sand box to solve some Project Euler problems and in tribut to Euler to use plenty of series methods to do so. I should build at least one generally useful thing that works for something else hence library.
 
 ## Usage
 
-FIXME
+right now these are evolving for use according to random problems for example:
+https://projecteuler.net/problem=7
+(last (take 10001 primes))
+https://projecteuler.net/problem=10
+(reduce + (take-while #(> 2000000 %) primes))
+https://projecteuler.net/problem=122
+(reduce +
+  (map
+    #(fn [goal]
+      (first
+        (nth
+	  (last
+	    (take-while #(some? (peek %))
+	      (iterate
+	        q-search-122
+		[[(sorted-set 1 2)] goal (list (bin-time-122 goal)) false]))) 2)))
+  (range 2 201)))
 
 ## License
 
