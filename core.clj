@@ -1,10 +1,16 @@
 (ns series.core)
 
-(defn foo
-  "I don't do a whole lot."
-  [x]
-  (println x "Hello, World!"))
-
+(defn neg-complement
+  "Takes a fn f and returns a fn that takes the same arguments as f,
+  has the same effects, if any, and returns the opposite numeric value. based on complement builtin"
+  {:added "1.0"
+   :static true}
+  [f] 
+  (fn 
+    ([] (*' -1 (f)))
+    ([x] (*' -1 (f x)))
+    ([x y] (*' -1 (f x y)))
+    ([x y & zs] (*' -1 (apply f x y zs)))))
 
 (defn dif-series [ init func rate ]
   (mapcat #(take rate %1) (iterate func init)))
@@ -54,6 +60,7 @@
 
 (defn app-func [xx] (fn [yy] (apply xx yy)))
 (defn multi-pop [ qq iter-num ] (last (take (+ 1 iter-num) (iterate pop qq))))
+(defn multi-rest [ ss iter-num ] (last (take (+ 1 iter-num) (iterate rest ss))))
 (defn enough-state? [dif-step-arg]
       (if (>= (count (nth dif-step-arg 2)) (nth dif-step-arg 3)) true false))
 
@@ -133,7 +140,7 @@
                  (if (= @prev xx) false (swap! prev (fn [dd] xx))))]
                  (fn [dd] (last (take-while pred? (iterate func dd))))))
 
-(defn sorting-sorted-sets [aa bb])
+(defn sorting-sorted-sets [aa bb] (compare (vec aa) (vec bb)))
 
 (defn bin-time-122 [aa] (+ (dec (bit-count aa)) (dec (count (base-conv aa 2)))))
 
@@ -162,6 +169,10 @@
 (defn smaller-set? [aa bb] (< (count aa) (count bb)))
 (defn prob-122 [[aa bb]] [(reduce (fn debug [out ii] (cond-assoc smaller-set? out (+ bb ii) (conj (get aa bb) (+ bb ii)))) aa (get aa bb)) (inc bb)])
 
+(def primes
+     (lazy-seq
+      (concat
+       '(2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97))))
 
 (defn prime? [aa]
   (not
@@ -174,11 +185,113 @@
      (lazy-seq
       (concat
        '(2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97)
-       (filter prime? (iterate (partial + 2) 101)))))
+       (filter prime? (iterate (partial +' 2) 101)))))
 
 (defn factor-prime [nn pp]
   (count (take-while #(= 0 (mod nn %)) (iterate (partial * pp) pp))))
 
+;;(take 5 (map #(first %) (filter #(nth % 2) (iterate prime-seq-next [3 (sorted-set-by sorting-sorted-sets (sorted-set-by (neg-complement compare) 2 4)) false]))))
+
+;;(defn y-comb [ff] (fn [aa] (last (take-while some? (iterate ff aa)))))
+
+;; can't optimze with sqrt need recursive version to reduce problem size
+;;(defn factor-map [aa] (reverse (rest (reverse (reduce (fn [out pp] (if (zero? pp) (assoc out (dec (count out)) (inc (last out))) (reduce conj out (list pp (inc (last out)))))) [1] (map #(factor-prime aa %) (take-while #(>= (Math/sqrt aa) %) primes)))))))
+
+(defn prime [ii] (last (take ii primes)))
+
+(defn exp [bb ee] (reduce *' (repeat ee bb)))
+
+(defn auto-viv-inc [aa] (if (number? aa) (inc aa) 1))
+
+(defn factor
+  ([nn]
+   (factor nn primes (sorted-map)))
+  ([nn pp out]
+       (let
+           [work-prime (first pp)
+           test (= 0 (mod nn work-prime))
+           loc-nn (if test (quot nn work-prime) nn)
+           loc-pp (if test pp (rest pp))
+           loc-out (if test (assoc out work-prime (auto-viv-inc (get out work-prime))) out)]
+           (if (= 1 nn) out (recur loc-nn loc-pp loc-out)))))
+
+(defn prac?
+  ([nn]
+   (prac? (factor nn) 1))
+  ([fact-map running-fact]
+             (cond
+              (empty? fact-map) true
+              (> (first (first fact-map)) (inc running-fact)) false
+              :else (recur (rest fact-map) (*' running-fact (exp (first (first fact-map)) (first (rest (first fact-map)))))))))
+
+(defn next-sieve [nn ss]
+  (if (not (= nn (first (first ss))))
+    ss
+    (recur nn (disj (conj ss (sorted-set-by (neg-complement compare) (+ (ffirst ss) (first (rest (first ss)))) (first (rest (first ss))))) (first ss)))))
+
+(defn add-sieve [nn ss]
+  (conj ss (sorted-set-by (neg-complement compare) nn ('* nn nn))))
+
+(defn prime-seq-next [[nn ss bb]]
+  (cond
+   bb [(inc' nn) (add-sieve nn ss) false]
+   (= (ffirst ss) nn) [(inc' nn) (next-sieve nn ss) false]
+   :else [nn ss true]))
+
+;;(take 5 (map #(first %) (filter #(nth % 2) (iterate prime-seq-next [3 (sorted-set-by sorting-sorted-sets (sorted-set-by (neg-complement compare) 2 4)) false]))))
+
 ;;(let [aa 600851475143] (reverse (rest (reverse (reduce (fn [out pp] (if (zero? pp) (assoc out (dec (count out)) (inc (last out))) (reduce conj out (list pp (inc (last out)))))) [1] (map #(factor-prime aa %) (take-while #(>= (Math/sqrt aa) %) primes)))))))
 
 ;;(last (take 10001 primes))
+
+(defn prac?
+  ([aa]
+   (if (odd? aa)
+       false
+     (prac? (quot aa 2) 1 1 primes)))
+  ([aa run-prod power prime-list]
+       (cond
+        (and (> (first prime-list) (inc run-prod)) (> run-prod 1)) false
+        (= aa 1) true
+        (= 0 (mod aa (first prime-list))) (prac? (quot aa (first prime-list)) run-prod (inc power) prime-list)
+        :else (recur aa (*' run-prod (quot (-' (exp (first prime-list) (inc power)) 1) (-' (first prime-list) 1))) 0 (rest prime-list)))))
+
+(defn eng-dream? [aa]
+  (and
+   (prac? (+' aa 8))
+   (prac? (-' aa 4))
+   (prac? (-' aa 8))
+   (prac? (+' aa 4))
+   (prac? aa)))
+
+(def eng-dreams (filter eng-dream? (iterate (partial +' 4) 12)))
+
+(defn trip-pair? [aa]
+  (and
+   (prime? (- aa 3))
+   (prime? (+ aa 3))
+   (prime? (- aa 9))
+   (prime? (+ aa 9))))
+
+(defn rough-log [aa]
+  (count (take-while #(> aa %) (iterate (partial *' 10) 10))))
+
+(defn newton [[nn guess]]
+  [nn (-' guess (quot (-' guess (quot nn guess)) 2))])
+
+(defn slice [aa bb]
+  (if (map? aa) (map #(get aa %) bb) (map #(nth aa %) bb)))
+
+(defn fill-in [aa position goal top bottom]
+  (let
+      [r-c-d [#{0 1 2 3} #{4 5 6 7} #{8 9 10 11} #{12 13 14 15} #{0 4 8 12} #{1 5 9 13} #{2 6 10 14} #{3 7 11 15} #{0 5 10 15} #{3 6 9 12}]
+      restrict-mag (map #(sum-num (slice aa %)) (filter #(contains? % position) r-c-d))
+      free-slot (map #(count (filter nil? (slice aa %))) (filter #(contains? % position) r-c-d))
+      high (min top (first (sort (map #(- goal %) restrict-mag))))
+      low (max bottom (last (sort (map #(- goal %1 (* top (dec %2))) restrict-mag free-slot))))]
+      (if (> low high) nil (map #(assoc aa position %) (range low (inc high))))))
+
+(defn make-magic [candidates goal top bottom fill-plan]
+  (if (empty? fill-plan)
+    candidates
+    (recur (filter some? (mapcat #(fill-in % (first fill-plan) goal top bottom) candidates)) goal top bottom (rest fill-plan))))
