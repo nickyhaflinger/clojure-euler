@@ -297,3 +297,52 @@
   (if (empty? fill-plan)
     candidates
     (recur (filter some? (mapcat #(fill-in % (first fill-plan) goal top bottom) candidates)) goal top bottom (rest fill-plan))))
+
+;; finding triple primes in triangular layout
+
+(defn tri-num [aa]
+  (quot (*' (inc' aa) aa) 2))
+
+(defn mem-prime? [aa]
+  (= aa (.nextProbablePrime (biginteger (dec aa)))))
+
+(defn multi-test [test? count-true goal test-seq]
+  (cond
+   (> (- goal count-true) (count test-seq)) false
+   (= goal count-true) true
+   :else (recur test? (if (test? (first test-seq)) (inc count-true) count-true) goal (rest test-seq))))
+
+(def duo-prime (partial multi-test mem-prime? 0 2))
+
+(defn neighbor-196 [position row]
+  (concat
+   (filter
+    #(and
+      (> % (tri-num (- row 2)))
+      (<= % (tri-num (dec row))))
+    (range (- position row) (- position row -3)))
+   (filter
+    #(and
+      (> % (tri-num row))
+      (<= % (tri-num (inc row))))
+    (range (+ position row -1) (+ position row 2)))))
+
+;; quick range of probable prime using iterate
+(defn range-primes [high low]
+  (let [next-prime (.nextProbablePrime (biginteger low))]
+       (if (<= next-prime high) next-prime)))
+
+;;finding the patterns
+(defn trip-prime-196? [row]
+  (filter
+   (fn [aa]
+       (or
+        (duo-prime (neighbor-196 aa row))
+        (reduce #(or %1 %2) false
+                (map
+                 (fn [bb]
+                     (if (> aa bb)
+                         (duo-prime (neighbor-196 bb (dec row)))
+                       (duo-prime (neighbor-196 bb (inc row)))))
+                 (filter #(mem-prime? %) (neighbor-196 aa row))))))
+   (rest (take-while some? (iterate (partial range-primes (tri-num row)) (tri-num (dec row)))))))
