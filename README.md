@@ -33,7 +33,7 @@ https://projecteuler.net/problem=166
   (map
     #(count
       (make-magic (list (zipmap (range 0 16) (repeat 16 nil))) % 9 0 '(0 1 2 3 4 5 6 7 15 11 10 14 12 8 9 13))) (range 0 37))
-      ```
+```
 
 ## License
 
