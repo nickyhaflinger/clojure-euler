@@ -6,11 +6,11 @@ this is a sand box to solve some Project Euler problems and in tribut to Euler t
 
 right now these are evolving for use according to random problems for example:
 https://projecteuler.net/problem=7
-(last (take 10001 primes))
+```(last (take 10001 primes))```
 https://projecteuler.net/problem=10
-(reduce + (take-while #(> 2000000 %) primes))
+```(reduce + (take-while #(> 2000000 %) primes))```
 https://projecteuler.net/problem=122
-(reduce +
+```(reduce +
   (map
     #(fn [goal]
       (first
@@ -20,12 +20,12 @@ https://projecteuler.net/problem=122
 	      (iterate
 	        q-search-122
 		[[(sorted-set 1 2)] goal (list (bin-time-122 goal)) false]))) 2)))
-  (range 2 201)))
+  (range 2 201)))```
 https://projecteuler.net/problem=166
-(reduce +
+```(reduce +
   (map
     #(count
-      (make-magic (list (zipmap (range 0 16) (repeat 16 nil))) % 9 0 '(0 1 2 3 4 5 6 7 15 11 10 14 12 8 9 13))) (range 0 37))
+      (make-magic (list (zipmap (range 0 16) (repeat 16 nil))) % 9 0 '(0 1 2 3 4 5 6 7 15 11 10 14 12 8 9 13))) (range 0 37))```
 
 ## License
 
