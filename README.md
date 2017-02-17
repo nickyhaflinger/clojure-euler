@@ -5,6 +5,10 @@ this is a sand box to solve some Project Euler problems and in tribut to Euler t
 ## Usage
 
 right now these are evolving for use according to random problems for example:
+https://projecteuler.net/problem=1
+```
+(- (reduce + (concat (range 3 1000 3) (range 5 1000 5))) (reduce + (range 15 1000 15)))
+```
 https://projecteuler.net/problem=7
 ```
 (last (take 10001 primes))
@@ -34,6 +38,11 @@ https://projecteuler.net/problem=166
     #(count
       (make-magic (list (zipmap (range 0 16) (repeat 16 nil))) % 9 0 '(0 1 2 3 4 5 6 7 15 11 10 14 12 8 9 13))) (range 0 37))
 ```
+https://projecteuler.net/problem=196
+```
+(reduce + (trip-prime-196? 5678027))
+```
+
 
 ## License
 
